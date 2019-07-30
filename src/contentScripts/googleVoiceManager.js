@@ -9,11 +9,12 @@ function getRandomWaitTime2(min, max) {
  * Pattern 1 for sending messages: randomly interval 1 s - 30 s between sends.
  */
 function delayPatternFn1(){
+	var count = 0;
 	const t1 = 1*1000;
 	const t2 = 30*1000;
 	
 	return function(){
-		return getRandomWaitTime2(t1, t2);
+		return count++ == 0 ? 200 : getRandomWaitTime2(t1, t2);
 	}
 }
 /**
