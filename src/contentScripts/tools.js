@@ -54,7 +54,7 @@ function keepTrying(method, silenceErrors, cb) {
  */
 function keepTryingAsPromised(method, silenceErrors) {
 	console.log('Bulk SMS - Running: ', getFunctionName(method));
-	const waitTime = getRandomWaitTimeMS(1500)
+	const waitTime = getRandomWaitTimeMS(300)
 	return new Promise((resolve, reject) => {
 		setTimeout(() => {
 			keepTrying(method, silenceErrors, (successful) => {
@@ -89,4 +89,15 @@ function showFatalError(message, reload) {
     if (reload) {
         window.location.reload();
     }
+}
+
+/**
+ * Sends a message to background.js for storage (usage tracking for future user-visible dashboards, and anonymous data for developer)
+ * @param  {object} payload  the google analytics payload
+ */
+function logEvent(payload) {
+	chrome.runtime.sendMessage({
+		gvbt_logger: true,
+		payload: payload
+	});
 }
