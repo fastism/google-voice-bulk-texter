@@ -1,29 +1,30 @@
 /**
- * Gets a random time in ms between min and max
+ * Gets a random time in ms between min and max for waiting
  * @return {Number}
  */
 function getRandomWaitTime2(min, max) {
 	return Math.floor(Math.random() * (max-min)) + min;
 }
 /**
- * Pattern 1 for sending messages: send message at some time between 1 s - 20 s.
+ * Pattern 1 for sending messages: randomly interval 1 s - 30 s between sends.
  */
 function delayPatternFn1(){
 	const t1 = 1*1000;
-	const t2 = 20*1000;
+	const t2 = 30*1000;
+	
 	return function(){
 		return getRandomWaitTime2(t1, t2);
 	}
 }
 /**
- * Pattern 2 for sending messages: send message randomly each 200 ms - 2 s. Pause for 1 minutes after 20 messages.
+ * Pattern 2 for sending messages: randomly interval 200 ms - 2 s between sends. Pause for 1 minutes after 20 messages.
  */
 function delayPatternFn2(){
 	var counter = 0;
-	const groupSize = 20;
+	const groupSize = 20; //pause for 1 minutes after each 20 contacts.
 	const shortDelay = 2*1000; //2 s
 	const longDelay = 1*60*1000; //1 min
-	
+
 	return function(){
 		if (counter <= groupSize) return (counter++, getRandomWaitTime2(200, shortDelay));
 		return (counter = 0, longDelay);
@@ -47,15 +48,16 @@ class GoogleVoiceSiteManager {
 
 	initialize() {
 		var that = this;
-		
+
 		chrome.runtime.onMessage.addListener(function (message, sender, response) {
 			if (message.from === 'popup' && message.type === 'SEND_MESSAGES') {
+				//get message content
 				that.addMessagesToQueue(message.messages);
 				
 				//get sending pattern
 				that.delayPattern = patterns[message.messages.delayer || 0]();
 				
-				//switch To Text View
+				// switch To Text View
 				document.querySelector(selectors.gvMessagesTab).click();
 
 				that.sendFromQueue();
@@ -211,6 +213,7 @@ class GoogleVoiceSiteManager {
 		if (sendButtonNew && sendButtonNew.offsetParent !== null && sendButtonNew.disabled === false) {
 			sendButtonNew.dispatchEvent(new Event('mousedown'));
 			sendButtonNew.dispatchEvent(new Event('mouseup'));
+			sendButtonNew.click();
 			return true;
 		}
 	}
@@ -238,6 +241,10 @@ class GoogleVoiceSiteManager {
 			}
 
 			if (sentMessageIsThreaded) {
+				logEvent({
+					eventLabel: 'MESSAGE_SENT',
+					eventValue: 1
+				});
 				// continue with queue
 				const timeBeforeNextMessage = this.delayPattern();
 				setTimeout(this.sendFromQueue.bind(this), timeBeforeNextMessage);
