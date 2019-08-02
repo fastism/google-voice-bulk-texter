@@ -7,7 +7,7 @@
 
   "description": "Send personalized bulk SMS messages via Google Voice.",
 
-  "version": "1.1.4",
+  "version": "1.1.6",
 
   "background": {
     "scripts": ["background.js"]
@@ -20,6 +20,13 @@
   },
 
   "content_scripts": [
+		{
+      "matches": ["https://hangouts.google.com/webchat/*", "https://voice.google.com/*"],
+      "js": [
+        "contentScripts/tools.js"
+      ],
+      "all_frames": true
+    },
     {
       "matches": ["https://hangouts.google.com/webchat/*"],
       "js": [
@@ -35,10 +42,9 @@
       ],
       "all_frames": true
     },
-    {
+		{
       "matches": ["https://hangouts.google.com/webchat/*", "https://voice.google.com/*"],
       "js": [
-        "contentScripts/tools.js",
         "contentScripts/main.js"
       ],
       "all_frames": true
