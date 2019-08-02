@@ -101,3 +101,19 @@ function logEvent(payload) {
 		payload: payload
 	});
 }
+
+/**
+ * inject style into DOM
+ */
+function addStyle(styles, id) { 
+	/* Create style document */ 
+	var css = document.createElement('style');
+	if (id) css.setAttribute('id', id);
+	css.type = 'text/css';
+	
+	if (css.styleSheet) css.styleSheet.cssText = styles; 
+	else css.appendChild(document.createTextNode(styles)); 
+	
+	/* Append style to the tag name */ 
+	document.getElementsByTagName("head")[0].appendChild(css); 
+} 
