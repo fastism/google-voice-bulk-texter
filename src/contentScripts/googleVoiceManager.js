@@ -1,4 +1,108 @@
 /**
+ * Create notification
+ */
+var showNotify;
+var showScreen;
+(function (){
+	const styles = `
+		#bulkSMS-screen {
+			position: fixed;
+			display: none;
+			height: 100%;
+			width: 100%;
+			top: 0;
+			left: 0;
+			z-index: 9999;
+		}
+		
+		#bulkSMS-notify {
+			display: none;
+		}
+		
+		#bulkSMS-notify .content {
+			position: fixed;
+			z-index: 9999;
+			box-shadow: 0 1px 3px 0 rgba(60,64,67,0.302), 0 4px 8px 3px rgba(60,64,67,0.149);
+			-webkit-font-smoothing: antialiased;
+			font-family: Roboto,RobotoDraft,Helvetica,Arial,sans-serif;
+			font-size: 16px;
+			letter-spacing: .2px;
+			-webkit-align-items: center;
+			align-items: center;
+			background-color: #202124;
+			border: none;
+			-webkit-border-radius: 4px;
+			border-radius: 4px;
+			bottom: 0;
+			-webkit-box-sizing: border-box;
+			box-sizing: border-box;
+			color: #fff;
+			display: -webkit-box;
+			display: -webkit-flex;
+			display: flex;
+			-webkit-flex-wrap: wrap;
+			flex-wrap: wrap;
+			font-weight: 400;
+			left: 0;
+			margin: 24px;
+			width: 180px;
+			min-height: 52px;
+			padding: 8px 24px;
+			right: auto;
+			text-align: left;
+			top: auto;
+			white-space: normal;
+		}
+	`;
+
+	const cnt = `<div class='content'>
+		<span class="wrap">
+			<span class="next-send">Next send: </span>
+			<span class="next-send-time">&nbsp;<span class="next-send-time">NaN</span>&nbsp;</span>
+		</span>
+	</div>`;
+	
+	const div = document.createElement('div');
+	div.setAttribute('id', 'bulkSMS-notify');
+	div.innerHTML = cnt;
+	document.body.appendChild(div);
+	
+	const screen = document.createElement('div');
+	screen.setAttribute('id', 'bulkSMS-screen');
+	document.body.appendChild(screen);
+	
+	addStyle(styles, 'bulkSMS');
+	
+	var timer;
+	function updateTime(time){
+		div.querySelector('.next-send-time').innerText = time >= 1000 ? time/1000 + " s" : time + " ms";
+	}
+	function startTimeout(time){
+		updateTime(time);
+		timer = setTimeout(() => {
+			time -= 1000;
+			if (time > 0) return startTimeout(time);
+			showNotify(false);
+		}, 1000)
+	}
+	
+	showNotify = function(time){
+		if (time === false) {
+			if (timer !== undefined) clearTimeout(timer);
+			return div.setAttribute('style', 'display: none');
+		}
+		//
+		div.setAttribute('style', 'display: block');
+		startTimeout(time);
+	}
+	
+	showScreen = function(b){
+		return screen.setAttribute('style', b === false ? 'display: none' : 'display: block');
+	}
+	
+})()
+
+/**
  * Gets a random time in ms between min and max for waiting
  * @return {Number}
  */
@@ -13,9 +117,7 @@ function delayPatternFn1(){
 	const t1 = 1*1000;
 	const t2 = 30*1000;
 	
-	return function(){
-		return count++ == 0 ? 200 : getRandomWaitTime2(t1, t2);
-	}
+	return () => getRandomWaitTime2(t1, t2);
 }
 /**
  * Pattern 2 for sending messages: randomly interval 200 ms - 2 s between sends. Pause for 1 minutes after 20 messages.
@@ -81,6 +183,7 @@ class GoogleVoiceSiteManager {
 		let verifyOnly = false;
 
 		if (this.numberQueue.length > 0) {
+			showScreen();
 			this.currentNumberSending = this.numberQueue.shift();
 
 			let sendExecutionQueue = this.getSendExecutionQueue();
@@ -247,8 +350,13 @@ class GoogleVoiceSiteManager {
 					eventValue: 1
 				});
 				// continue with queue
+				showScreen(false); //screen off
 				const timeBeforeNextMessage = this.delayPattern();
-				setTimeout(this.sendFromQueue.bind(this), timeBeforeNextMessage);
+				showNotify(timeBeforeNextMessage);
+				setTimeout(() => {
+					showNotify(false);
+					this.sendFromQueue();
+				}, timeBeforeNextMessage);
 				return true;
 			}
 		}
