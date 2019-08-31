@@ -75,7 +75,7 @@ var showScreen;
 	
 	var timer;
 	function updateTime(time){
-		div.querySelector('.next-send-time').innerText = time >= 1000 ? time/1000 + " s" : time + " ms";
+		div.querySelector('.next-send-time').innerText = time >= 1000 ? Math.floor(time/1000) + " s" : time + " ms";
 	}
 	function startTimeout(time){
 		updateTime(time);
@@ -351,12 +351,14 @@ class GoogleVoiceSiteManager {
 				});
 				// continue with queue
 				showScreen(false); //screen off
-				const timeBeforeNextMessage = this.delayPattern();
-				showNotify(timeBeforeNextMessage);
-				setTimeout(() => {
-					showNotify(false);
-					this.sendFromQueue();
-				}, timeBeforeNextMessage);
+				if (this.numberQueue.length > 0) {
+					const timeBeforeNextMessage = this.delayPattern();
+					showNotify(timeBeforeNextMessage);
+					setTimeout(() => {
+						showNotify(false);
+						this.sendFromQueue();
+					}, timeBeforeNextMessage);
+				}
 				return true;
 			}
 		}
